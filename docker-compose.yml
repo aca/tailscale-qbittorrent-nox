@@ -1,0 +1,28 @@
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    hostname: tailscale-qbittorrent-nox
+    ports:
+      - "8080:8080"
+    environment:
+      - TS_AUTHKEY=$TS_AUTHKEY
+      - TS_EXTRA_ARGS=$TS_EXTRA_ARGS
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - ${PWD}/tailscale:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+  qbittorrent-nox:
+    image: qbittorrentofficial/qbittorrent-nox
+    depends_on:
+      - tailscale
+    network_mode: service:tailscale
+    environment:
+      - QBT_CONFIG_PATH=/config/qBittorrent/config/qBittorrent.conf
+    volumes:
+      - ${PWD}/qBittorrent:/config/qBittorrent
+      - /mnt:/mnt # Mount download directory
